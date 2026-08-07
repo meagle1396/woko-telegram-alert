@@ -77,7 +77,8 @@ def main():
     current = set()
 
     # WOKO listing cards
-    listings = soup.select("article")
+    # WOKO listing cards (excludes the intro/filter "carticle" block)
+    listings = soup.select("article.crooms")
 
     print(f"Found {len(listings)} listings")
 
