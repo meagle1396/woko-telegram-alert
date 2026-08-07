@@ -1,5 +1,6 @@
 import os
 import json
+import html
 import hashlib
 import requests
 from bs4 import BeautifulSoup
@@ -36,6 +37,7 @@ def send_telegram(message):
     data = {
         "chat_id": CHAT_ID,
         "text": message,
+        "parse_mode": "HTML",
         "disable_web_page_preview": False,
     }
 
@@ -66,12 +68,19 @@ def make_id(text):
         text.encode("utf-8")
     ).hexdigest()
 
+def format_listing(text):
+    """Break the flat listing text into readable lines with bold labels."""
+    escaped = html.escape(text)
+
+    for label in ("When", "Address", "Location", "Rent/month"):
+        escaped = escaped.replace(label, f"\n<b>{label}:</b>")
+
+    return escaped.strip()
 
 def main():
 
-    html = get_page()
-
-    soup = BeautifulSoup(html, "html.parser")
+    page_html = get_page()
+    soup = BeautifulSoup(page_html, "html.parser")
 
     seen = load_seen()
     current = set()
@@ -104,8 +113,8 @@ def main():
             continue
 
         message = (
-            "🚨 NEW WOKO UNIT\n\n"
-            f"{text[:3000]}\n\n"
+            "🚨 <b>NEW WOKO UNIT</b>\n\n"
+            f"{format_listing(text[:3000])}\n\n"
             f"🔗 {WOKO_URL}"
         )
 
