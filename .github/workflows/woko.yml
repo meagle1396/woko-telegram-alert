@@ -1,0 +1,48 @@
+name: WOKO Telegram Alert
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: "*/5 * * * *"
+
+jobs:
+
+  check-woko:
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+
+    steps:
+
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: |
+          pip install requests beautifulsoup4
+
+      - name: Run WOKO monitor
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+          CHAT_ID: ${{ secrets.CHAT_ID }}
+        run: |
+          python woko_alert.py
+
+      - name: Save state
+        run: |
+          git config user.name "WOKO Alert Bot"
+          git config user.email "woko-alert@example.com"
+
+          git add seen.json
+
+          git diff --cached --quiet || git commit -m "Update WOKO listings"
+
+          git push
