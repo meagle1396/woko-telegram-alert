@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 WOKO_URL = "https://www.woko.ch/en/our-service/available-units"
 
 TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
-CHAT_ID = os.environ["CHAT_ID"]
+CHAT_IDS = [c.strip() for c in os.environ["CHAT_ID"].split(",") if c.strip()]
 
 STATE_FILE = "seen.json"
 
@@ -34,20 +34,21 @@ def get_page():
 def send_telegram(message):
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
 
-    data = {
-        "chat_id": CHAT_ID,
-        "text": message,
-        "parse_mode": "HTML",
-        "disable_web_page_preview": False,
-    }
-
-    response = requests.post(
-        url,
-        data=data,
-        timeout=30
-    )
-
-    response.raise_for_status()
+    for chat_id in CHAT_IDS:
+        try:
+            response = requests.post(
+                url,
+                data={
+                    "chat_id": chat_id,
+                    "text": message,
+                    "parse_mode": "HTML",
+                    "disable_web_page_preview": False,
+                },
+                timeout=30,
+            )
+            response.raise_for_status()
+        except requests.RequestException as e:
+            print(f"Failed to send to {chat_id}: {e}")
 
 
 def load_seen():
